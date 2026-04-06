@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0b1710"/>
+
+  <!-- Outer ring accent -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#1b4332" stroke-width="6"/>
+
+  <!-- Stylised leaf/grass blades -->
+  <path d="M 200 340 Q 200 240 256 180 Q 312 240 312 340 Z" fill="#1b4332"/>
+  <path d="M 175 340 Q 155 250 200 190 Q 210 260 220 340 Z" fill="#2d6a4f"/>
+  <path d="M 337 340 Q 357 250 312 190 Q 302 260 292 340 Z" fill="#2d6a4f"/>
+
+  <!-- Bright highlight blades -->
+  <path d="M 215 340 Q 215 265 256 210 Q 260 270 260 340 Z" fill="#52796f"/>
+  <path d="M 256 210 Q 297 265 297 340 L 260 340 Z" fill="#52796f"/>
+
+  <!-- Central bright stem -->
+  <line x1="256" y1="340" x2="256" y2="200" stroke="#74c69d" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Ground line -->
+  <rect x="150" y="336" width="212" height="8" rx="4" fill="#2d6a4f"/>
+
+  <!-- Brand text -->
+  <text x="256" y="415" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="44" font-weight="bold" font-style="italic"
+        fill="#74c69d" letter-spacing="1">Bobaas</text>
+  <text x="256" y="448" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="22" font-weight="bold"
+        fill="#2d6a4f" letter-spacing="3">TUINDIENSTE</text>
+</svg>

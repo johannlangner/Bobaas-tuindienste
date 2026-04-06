@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1710">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bobaas">
+  <meta name="application-name" content="Bobaas Tuindienste">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>Bobaas Tuindienste</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #0d1a12; }
+    body {
+      font-family: 'Lato', sans-serif;
+      color: #e8f0e8;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+    button, select, input { font-family: 'Lato', sans-serif; font-size: 15px; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { opacity: 1; }
+
+    /* ── Layout ── */
+    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+    /* ── Header ── */
+    #header {
+      background: #0b1710;
+      border-bottom: 1px solid #1a3020;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 56px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+    #brand { display: flex; flex-direction: column; line-height: 1.2; }
+    #brand-main { font-size: 18px; font-weight: 700; color: #74c69d; letter-spacing: -0.01em; }
+    #brand-sub  { font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; color: #3d6b4e; font-weight: 400; }
+    #settings-btn {
+      background: none; border: 1px solid #1e3a28; color: #5a8a6a;
+      border-radius: 6px; padding: 8px 11px; font-size: 18px; cursor: pointer;
+      min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Scrollable content area ── */
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      padding: 0 0 80px 0;
+    }
+    .section-pad { padding: 16px; }
+
+    /* ── Bottom nav ── */
+    #bottom-nav {
+      display: flex;
+      background: #0b1710;
+      border-top: 1px solid #1a3020;
+      flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .nav-item {
+      flex: 1; background: none; border: none; cursor: pointer;
+      padding: 12px 4px 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      color: #3d6b4e; transition: color 0.15s;
+      min-height: 56px;
+    }
+    .nav-item.active { color: #74c69d; }
+    .nav-item .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-item .nav-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+
+    /* ── Day tabs ── */
+    #day-tabs {
+      display: flex;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      border-bottom: 1px solid #1a3020;
+      background: #0b1710;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+    #day-tabs::-webkit-scrollbar { display: none; }
+    .day-tab {
+      background: none; border: none; cursor: pointer;
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      padding: 12px 13px 10px;
+      border-bottom: 2px solid transparent;
+      color: #4a7a5a; white-space: nowrap;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      min-height: 44px; position: relative;
+      transition: color 0.15s;
+    }
+    .day-tab.active { color: #74c69d; border-bottom-color: #74c69d; }
+    .day-tab.sun-tab { color: #6a5a20; }
+    .day-tab.sun-tab.active { color: #d4a843; border-bottom-color: #d4a843; }
+    .day-badge {
+      position: absolute; top: 6px; right: 4px;
+      background: #1b4332; color: #74c69d;
+      border-radius: 50%; width: 14px; height: 14px;
+      font-size: 8px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .day-badge.sun { background: #3a2f10; color: #c49830; }
+
+    /* ── Monthly Planner & Day Detail Pages ── */
+    #cal-page, #day-page {
+      position: fixed; inset: 0; background: #0d1a12;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    #cal-page { z-index: 38; }
+    #day-page  { z-index: 42; }
+    #cal-page.open, #day-page.open { transform: translateX(0); }
+
+    #cal-header, #dp-header {
+      background: #0b1710; border-bottom: 1px solid #1a3020;
+      display: flex; align-items: center;
+      padding: 0 8px; min-height: 56px; flex-shrink: 0;
+    }
+    #cal-back, #dp-back {
+      background: none; border: none; color: #74c69d; font-size: 22px;
+      cursor: pointer; min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; flex-shrink: 0;
+    }
+    #cal-month-nav { display: flex; align-items: center; flex: 1; justify-content: center; }
+    .cal-nav-btn {
+      background: none; border: none; color: #5a8a6a; font-size: 22px;
+      cursor: pointer; min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center; border-radius: 6px;
+    }
+    .cal-nav-btn:active { color: #74c69d; }
+    #cal-month-label { font-size: 16px; font-weight: 700; color: #d8f3dc; min-width: 160px; text-align: center; }
+    #cal-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+    #cal-grid-wrap { padding: 10px 8px 4px; }
+    .cal-dow-row { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 4px; }
+    .cal-dow { text-align: center; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #3d6b4e; padding: 4px 0; }
+    .cal-dow.sun { color: #6a5a20; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+    .cal-cell {
+      min-height: 54px; border-radius: 6px; padding: 5px 3px 4px;
+      cursor: pointer; background: #111a14; border: 1px solid #1a2d1e;
+      transition: background 0.12s; display: flex; flex-direction: column; align-items: center;
+      position: relative; -webkit-user-select: none; user-select: none;
+    }
+    .cal-cell:active { background: #1a2d21; }
+    .cal-cell.empty { background: transparent !important; border-color: transparent !important; cursor: default; pointer-events: none; }
+    .cal-cell.today { background: #0f2a1a !important; border-color: #2d6a4f !important; box-shadow: inset 0 0 0 1.5px #2d6a4f; }
+    .cal-cell.is-sun { background: #14120a; border-color: #2a2010; }
+    .cal-cell.is-sun.today { background: #1a160a !important; border-color: #c49830 !important; box-shadow: inset 0 0 0 1.5px #c49830; }
+    .cal-cell.has-jobs { border-color: #2d5a3f; }
+    .cal-day-num { font-size: 13px; font-weight: 700; color: #5a8a6a; line-height: 1; margin-bottom: 3px; }
+    .cal-cell.today .cal-day-num { color: #74c69d; }
+    .cal-cell.is-sun .cal-day-num { color: #7a6a30; }
+    .cal-cell.is-sun.today .cal-day-num { color: #d4a843; }
+    .cal-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
+    .cal-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .cal-today-pip { position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #74c69d; }
+    .cal-sun-pip   { position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #d4a843; }
+    #cal-month-summary {
+      padding: 10px 14px; background: #0b1710; border-top: 1px solid #1a2d21;
+      display: flex; gap: 18px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .cal-sum-item { font-size: 11px; color: #3d6b4e; }
+    .cal-sum-val { font-family: 'DM Mono', monospace; color: #74c69d; }
+
+    #dp-title { font-size: 15px; font-weight: 700; color: #d8f3dc; flex: 1; line-height: 1.2; margin-left: 4px; }
+    #dp-add-btn {
+      background: #2d6a4f; color: #d8f3dc; border: none;
+      border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 700;
+      cursor: pointer; min-height: 40px; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    #dp-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding: 16px 16px 40px; }
+    .dp-section { background: #131f17; border: 1px solid #1e3a28; border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
+    .dp-section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: #3d6b4e; padding: 9px 14px 7px; background: #0f1a13; border-bottom: 1px solid #1a2d21; }
+
+    /* ── Client Detail Page ── */
+    #client-page {
+      position: fixed; inset: 0; z-index: 40;
+      background: #0d1a12;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    #client-page.open { transform: translateX(0); }
+    #cp-header {
+      background: #0b1710; border-bottom: 1px solid #1a3020;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; min-height: 56px; flex-shrink: 0;
+    }
+    #cp-back {
+      background: none; border: none; color: #74c69d; font-size: 22px;
+      cursor: pointer; min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0; border-radius: 6px;
+    }
+    #cp-title { font-size: 17px; font-weight: 700; color: #d8f3dc; flex: 1; }
+    #cp-delete-btn {
+      background: none; border: 1px solid #5a2a2a; color: #e07070;
+      border-radius: 6px; padding: 8px 12px; font-size: 13px; font-weight: 700;
+      cursor: pointer; min-height: 40px; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    #cp-content {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
+      padding: 16px 16px 40px;
+    }
+    .cp-section {
+      background: #131f17; border: 1px solid #1e3a28;
+      border-radius: 8px; margin-bottom: 14px; overflow: hidden;
+    }
+    .cp-section-title {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em;
+      color: #3d6b4e; padding: 10px 14px 8px;
+      background: #0f1a13; border-bottom: 1px solid #1a2d21;
+    }
+    .cp-row {
+      display: flex; padding: 12px 14px; border-bottom: 1px solid #0f1a13;
+      align-items: flex-start; gap: 10px;
+    }
+    .cp-row:last-child { border-bottom: none; }
+    .cp-key { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #3d6b4e; min-width: 80px; padding-top: 2px; flex-shrink: 0; }
+    .cp-val { font-size: 14px; color: #c8e6c9; flex: 1; line-height: 1.4; }
+    .cp-val.mono { font-family: 'DM Mono', monospace; font-size: 13px; }
+    .cp-job-row {
+      padding: 13px 14px; border-bottom: 1px solid #0f1a13;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .cp-job-row:last-child { border-bottom: none; }
+    .cp-job-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .cp-job-body { flex: 1; min-width: 0; }
+    .cp-job-name { font-size: 14px; font-weight: 700; color: #d8f3dc; margin-bottom: 3px; }
+    .cp-job-meta { font-size: 12px; color: #5a8a6a; }
+    .cp-job-right { text-align: right; flex-shrink: 0; }
+    .cp-job-rev { font-family: 'DM Mono', monospace; font-size: 14px; color: #74c69d; }
+    .cp-job-net { font-family: 'DM Mono', monospace; font-size: 11px; color: #4a6a50; margin-top: 2px; }
+    /* Notepad */
+    .notepad-area {
+      width: 100%; min-height: 180px;
+      background: #0a1510; border: none; outline: none;
+      color: #c8e6c9; font-family: 'Lato', sans-serif; font-size: 14px;
+      line-height: 1.7; padding: 14px;
+      resize: none; -webkit-overflow-scrolling: touch;
+      caret-color: #74c69d;
+    }
+    .notepad-area::placeholder { color: #2a4a35; }
+    .notepad-saved {
+      font-size: 10px; color: #2d6a4f; text-align: right;
+      padding: 6px 14px 10px; font-style: italic;
+      min-height: 26px;
+    }
+
+    /* ── Cards ── */
+    .job-card {
+      background: #131f17; border: 1px solid #1e3a28;
+      border-left: 4px solid var(--accent);
+      border-radius: 6px; padding: 14px;
+      margin-bottom: 10px; cursor: pointer;
+      transition: background 0.15s;
+      -webkit-user-select: none; user-select: none;
+    }
+    .job-card:active { background: #1a2d21; }
+    .job-card.sun { background: #1a180e; border-color: #3a3020; }
+    .job-card.sun:active { background: #221f10; }
+
+    .client-card {
+      background: #131f17; border: 1px solid #1e3a28;
+      border-radius: 6px; padding: 14px; margin-bottom: 10px;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 3px 8px; border-radius: 3px;
+      font-family: 'DM Mono', monospace; font-size: 10px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .sun-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #2a2010; border: 1px solid #4a3a18;
+      border-radius: 4px; padding: 5px 10px;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #7a6030; cursor: pointer; min-height: 36px;
+      transition: all 0.15s; font-weight: 700;
+    }
+    .sun-pill.on { background: #3a2f10; border-color: #c49830; color: #f0c040; }
+
+    /* ── Stat boxes ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-box { background: #131f17; border: 1px solid #1e3a28; border-radius: 6px; padding: 14px; }
+    .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: #3d6b4e; margin-bottom: 6px; }
+    .stat-val { font-family: 'DM Mono', monospace; font-size: 20px; }
+    .stat-sub { font-size: 10px; color: #3d6b4e; margin-top: 3px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: #2d6a4f; color: #d8f3dc; border: none;
+      font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      font-size: 12px; padding: 13px 20px; border-radius: 6px;
+      cursor: pointer; min-height: 48px; transition: background 0.15s;
+    }
+    .btn-primary:active { background: #3a8c68; }
+    .btn-ghost {
+      background: none; color: #7aab8a; border: 1px solid #2a4a35;
+      font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      font-size: 12px; padding: 13px 20px; border-radius: 6px;
+      cursor: pointer; min-height: 48px; transition: all 0.15s;
+    }
+    .btn-ghost:active { border-color: #2d6a4f; }
+    .btn-danger {
+      background: none; color: #e07070; border: 1px solid #5a2a2a;
+      font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      font-size: 12px; padding: 13px 20px; border-radius: 6px;
+      cursor: pointer; min-height: 48px;
+    }
+    .btn-danger:active { background: #3a1a1a; }
+    .fab {
+      position: fixed; bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      right: 16px; z-index: 20;
+      background: #2d6a4f; color: #d8f3dc; border: none;
+      width: 56px; height: 56px; border-radius: 50%;
+      font-size: 26px; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .fab:active { background: #3a8c68; transform: scale(0.94); }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #3d6b4e; margin-bottom: 6px; display: block; }
+    .form-input, .form-select {
+      background: #0d1a12; border: 1px solid #2a4a35;
+      color: #e8f0e8; border-radius: 6px;
+      padding: 13px 14px; width: 100%;
+      font-size: 15px; outline: none;
+      min-height: 48px; transition: border 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: #52796f; }
+    select.form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a7a5a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+    /* ── Toggle ── */
+    .toggle-row { display: flex; align-items: center; gap: 12px; min-height: 48px; cursor: pointer; }
+    .toggle-track { width: 44px; height: 24px; border-radius: 12px; border: 1px solid #3a6a50; background: #0d1a12; position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .toggle-track.on { background: #2d6a4f; border-color: #52a070; }
+    .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #4a7a5a; transition: transform 0.2s, background 0.2s; }
+    .toggle-track.on .toggle-thumb { transform: translateX(20px); background: #d8f3dc; }
+    .toggle-label { font-size: 14px; color: #7aab8a; }
+    .toggle-track.on + .toggle-label { color: #d4a843; }
+
+    /* ── Modal / Sheet ── */
+    .sheet-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 50; display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .sheet {
+      background: #131f17; border-top: 1px solid #2d6a4f;
+      border-radius: 16px 16px 0 0;
+      padding: 0 0 env(safe-area-inset-bottom, 16px);
+      max-height: 92vh; display: flex; flex-direction: column;
+    }
+    .sheet-handle { width: 36px; height: 4px; background: #2d6a4f; border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+    .sheet-title { font-size: 18px; font-weight: 700; color: #d8f3dc; padding: 16px 20px 12px; border-bottom: 1px solid #1e3a28; flex-shrink: 0; }
+    .sheet-body { overflow-y: auto; padding: 16px 20px; flex: 1; -webkit-overflow-scrolling: touch; }
+    .sheet-footer { padding: 12px 20px; border-top: 1px solid #1e3a28; display: flex; gap: 10px; flex-shrink: 0; }
+    .sheet-footer .btn-primary, .sheet-footer .btn-ghost, .sheet-footer .btn-danger { flex: 1; }
+
+    /* ── Detail rows ── */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .detail-cell { background: #0d1a12; border-radius: 6px; padding: 10px 12px; }
+    .detail-key { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: #3d6b4e; margin-bottom: 4px; }
+    .detail-val { font-family: 'DM Mono', monospace; font-size: 13px; color: #b7e4c7; }
+
+    /* ── Settings sheet ── */
+    .sett-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #1a2d21; }
+    .sett-key { font-size: 13px; color: #9ecfb0; }
+    .sett-val { font-family: 'DM Mono', monospace; font-size: 14px; color: #74c69d; }
+    .sett-input { background: #0d1a12; border: 1px solid #2a4a35; color: #e8f0e8; border-radius: 6px; padding: 10px 12px; width: 100px; font-size: 15px; text-align: right; outline: none; min-height: 44px; }
+
+    /* ── Sunday banner ── */
+    .sun-banner { background: #1a180e; border: 1px solid #4a3a18; border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .sun-banner span { font-size: 13px; color: #a08030; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 48px 20px; border: 1px dashed #1e3a28; border-radius: 8px; }
+    .empty .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty p { font-size: 13px; color: #3d6b4e; }
+
+    /* ── Misc ── */
+    .mono { font-family: 'DM Mono', monospace; }
+    .pos { color: #74c69d; } .neg { color: #e07070; }
+    .row { display: flex; justify-content: space-between; align-items: flex-start; }
+    .muted { color: #4a7a5a; font-size: 12px; }
+    .section-header { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: #3d6b4e; padding: 10px 16px 8px; background: #0b1710; border-bottom: 1px solid #1a2d21; }
+    .divider { border: none; border-top: 1px solid #1a2d21; margin: 0; }
+    .fuel-preview { background: #0d1a12; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; font-family: 'DM Mono', monospace; font-size: 12px; color: #4a6a50; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div id="brand">
+      <span id="brand-main">Bobaas Tuindienste</span>
+      <span id="brand-sub">Werkskedule</span>
+    </div>
+    <button id="settings-btn" onclick="openSettings()">⚙️</button>
+  </div>
+
+  <!-- Schedule tab: day strip sits between header and content -->
+  <div id="day-strip" style="display:none; background:#0b1710; flex-shrink:0;">
+    <div id="day-tabs"></div>
+  </div>
+
+  <div id="content"></div>
+
+  <!-- FAB: only on schedule tab -->
+  <button class="fab" id="fab" onclick="openAddJob()" style="display:none">+</button>
+
+  <div id="bottom-nav">
+    <button class="nav-item active" data-view="schedule" onclick="switchView('schedule')">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Skedule</span>
+    </button>
+    <button class="nav-item" data-view="calendar" onclick="switchView('calendar')">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Kalender</span>
+    </button>
+    <button class="nav-item" data-view="clients" onclick="switchView('clients')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Kliënte</span>
+    </button>
+    <button class="nav-item" data-view="summary" onclick="switchView('summary')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Opsomming</span>
+    </button>
+  </div>
+</div>
+
+<!-- Sheet container -->
+<div id="sheet-root"></div>
+
+<!-- Monthly Planner Page -->
+<div id="cal-page">
+  <div id="cal-header">
+    <button id="cal-back" onclick="closeCalPage()">&#8592;</button>
+    <div id="cal-month-nav">
+      <button class="cal-nav-btn" onclick="calPrevMonth()">&#8249;</button>
+      <span id="cal-month-label"></span>
+      <button class="cal-nav-btn" onclick="calNextMonth()">&#8250;</button>
+    </div>
+    <div style="width:44px"></div>
+  </div>
+  <div id="cal-content">
+    <div id="cal-grid-wrap"></div>
+    <div id="cal-month-summary"></div>
+  </div>
+</div>
+
+<!-- Day Detail Page -->
+<div id="day-page">
+  <div id="dp-header">
+    <button id="dp-back" onclick="closeDayPage()">&#8592;</button>
+    <span id="dp-title"></span>
+    <button id="dp-add-btn" onclick="dpAddJob()">+ Werk</button>
+  </div>
+  <div id="dp-content"></div>
+</div>
+
+<!-- Client Detail Page -->
+<div id="client-page">
+  <div id="cp-header">
+    <button id="cp-back" onclick="closeClientPage()">&#8592;</button>
+    <span id="cp-title"></span>
+    <button id="cp-delete-btn" onclick="cpDeleteClient()">🗑 Verwyder</button>
+  </div>
+  <div id="cp-content"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA & CONSTANTS
+// ═══════════════════════════════════════════════════
+const DAY_META = [
+  { abbr:"Ma",  full:"Maandag",    sun:false },
+  { abbr:"Di",  full:"Dinsdag",    sun:false },
+  { abbr:"Wo",  full:"Woensdag",   sun:false },
+  { abbr:"Do",  full:"Donderdag",  sun:false },
+  { abbr:"Vr",  full:"Vrydag",     sun:false },
+  { abbr:"Sa",  full:"Saterdag",   sun:false },
+  { abbr:"So",  full:"Sondag",     sun:true  },
+];
+
+const SERVICES = [
+  { id:"mow",   label:"Maai & Rand",      icon:"🌿", color:"#4a7c59", dur:60  },
+  { id:"trim",  label:"Bossie Sny",       icon:"✂️", color:"#2d6a4f", dur:90  },
+  { id:"clean", label:"Tuin Skoonmaak",   icon:"🍂", color:"#8b5e3c", dur:120 },
+  { id:"plant", label:"Aanplant",         icon:"🌱", color:"#52796f", dur:90  },
+  { id:"fert",  label:"Bemes",            icon:"💧", color:"#74c69d", dur:45  },
+  { id:"full",  label:"Volle Diens",      icon:"⭐", color:"#1b4332", dur:180 },
+];
+
+const SEED_CLIENTS = [
+  { id:1, name:"Van der Merwe", address:"12 Akasialaan",     phone:"082 555 0011", notes:"Hekskode: 1234",                sundayOk:false },
+  { id:2, name:"Pietersen",     address:"7 Mimosarylaan",    phone:"071 333 0022", notes:"Hond in erf — skakel eers",    sundayOk:false },
+  { id:3, name:"Botha Estate",  address:"Erf 45, Leeuwkopweg",phone:"060 111 0033",notes:"Groot eiendom, bring aanhanger",sundayOk:true  },
+];
+
+const SEED_JOBS = [
+  { id:1, clientId:1, day:0, hour:7, svcId:"mow",  recur:"weekly",       km:5  },
+  { id:2, clientId:2, day:2, hour:9, svcId:"trim",  recur:"fortnightly",  km:8  },
+  { id:3, clientId:3, day:5, hour:7, svcId:"full",  recur:"weekly",       km:12 },
+];
+
+const HOURS = Array.from({length:12}, (_,i) => i+7);
+const KEY = "bobaas_v1";
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let state = (() => {
+  try {
+    const s = localStorage.getItem(KEY);
+    if (s) { const p = JSON.parse(s); if (!p.calJobs) p.calJobs = []; return p; }
+  } catch {}
+  return { clients: SEED_CLIENTS, jobs: SEED_JOBS, calJobs: [], rate:180, fuelPrice:25, fuelCons:9.5, nextId:10 };
+})();
+
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+}
+
+let currentView = "schedule";
+let currentDay  = (() => {
+  const d = new Date().getDay(); // 0=Sun
+  const map = [6,0,1,2,3,4,5];  // JS day → our index (Mon=0…Sun=6)
+  return map[d];
+})();
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const getSvc    = id => SERVICES.find(s => s.id === id) || SERVICES[0];
+const getClient = id => state.clients.find(c => c.id === id);
+const dayJobs   = d  => state.jobs.filter(j => j.day === d).sort((a,b) => a.hour - b.hour);
+
+function timeFmt(h) {
+  if (h === 12) return "12:00";
+  return h < 12 ? `${h}:00` : `${h-12}:00`;
+}
+function ap(h) { return h < 12 ? "vm" : "nm"; }
+
+function fuelCost(job) { return ((job.km||0)/100) * state.fuelCons * state.fuelPrice; }
+function revenue(job)  { return (getSvc(job.svcId).dur/60) * state.rate; }
+function netIncome(job){ return revenue(job) - fuelCost(job); }
+
+function weeklyRevenue() { return state.jobs.reduce((s,j) => { const r=revenue(j); return s+(j.recur==="weekly"?r:r/2); },0); }
+function weeklyFuel()    { return state.jobs.reduce((s,j) => { const f=fuelCost(j); return s+(j.recur==="weekly"?f:f/2); },0); }
+function weeklyNet()     { return weeklyRevenue() - weeklyFuel(); }
+function totalHours()    { return state.jobs.reduce((s,j) => s+getSvc(j.svcId).dur/60, 0); }
+
+function rFmt(n)  { return `R${Math.round(n)}`; }
+function hFmt(n)  { return `${n.toFixed(1)}u`; }
+
+// ═══════════════════════════════════════════════════
+// VIEW SWITCH
+// ═══════════════════════════════════════════════════
+function switchView(v) {
+  currentView = v;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  document.getElementById('day-strip').style.display = v === 'schedule' ? 'block' : 'none';
+  document.getElementById('fab').style.display = v === 'schedule' ? 'flex' : 'none';
+  if (v === 'calendar') { openCalPage(); return; }
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function render() {
+  if (currentView === 'schedule') renderSchedule();
+  else if (currentView === 'clients') renderClients();
+  else renderSummary();
+}
+
+// ── Schedule ──
+function renderSchedule() {
+  // Day tabs
+  const tabs = document.getElementById('day-tabs');
+  tabs.innerHTML = DAY_META.map((d,i) => {
+    const count = dayJobs(i).length;
+    const isSun = d.sun;
+    const active = i === currentDay ? 'active' : '';
+    const suncls = isSun ? 'sun-tab' : '';
+    const badge  = count > 0 ? `<span class="day-badge${isSun?' sun':''}">${count}</span>` : '';
+    const todayDow = [6,0,1,2,3,4,5][new Date().getDay()];
+    const todayDot = i === todayDow ? `<span style="display:block;width:4px;height:4px;border-radius:50%;background:${isSun?'#d4a843':'#74c69d'};margin:1px auto 0"></span>` : '';
+    return `<button class="day-tab ${active} ${suncls}" onclick="selectDay(${i})">${d.abbr}${badge}${todayDot}</button>`;
+  }).join('');
+
+  const dm   = DAY_META[currentDay];
+  const jobs = dayJobs(currentDay);
+  const totalMin = jobs.reduce((s,j) => s+getSvc(j.svcId).dur, 0);
+
+  let html = `<div class="section-pad">`;
+
+  // Sunday warning
+  if (dm.sun) {
+    html += `<div class="sun-banner">
+      <span style="font-size:18px;flex-shrink:0">☀️</span>
+      <span><strong style="color:#d4a843">Sondag</strong> — opsioneel. Boek slegs kliënte wat Sondag bevestig het.</span>
+    </div>`;
+  }
+
+  // Day heading
+  html += `<div class="row" style="margin-bottom:16px;align-items:center">
+    <div>
+      <div style="font-size:20px;font-weight:700;color:${dm.sun?'#d4a843':'#d8f3dc'}">${dm.full}</div>
+      <div class="muted" style="margin-top:2px">${jobs.length} werk${jobs.length!==1?'e':''}${jobs.length>0?` · ~${totalMin} min`:''}</div>
+    </div>
+  </div>`;
+
+  if (jobs.length === 0) {
+    html += `<div class="empty">
+      <div class="empty-icon">${dm.sun?'☀️':'🌿'}</div>
+      <p>Geen werke vir ${dm.full}</p>
+    </div>`;
+  } else {
+    jobs.forEach(job => {
+      const svc    = getSvc(job.svcId);
+      const client = getClient(job.clientId);
+      const endH   = job.hour + svc.dur/60;
+      const fuel   = fuelCost(job);
+      const net    = netIncome(job);
+      const isSun  = job.day === 6;
+      const sunBadge = isSun
+        ? (client?.sundayOk
+            ? `<span class="badge" style="background:#2a2010;color:#d4a843;border:1px solid #5a4a2044">✓ So</span>`
+            : `<span class="badge" style="background:#2a1010;color:#c07070;border:1px solid #5a303044">⚠ Bevestig</span>`)
+        : '';
+
+      html += `<div class="job-card${isSun?' sun':''}" style="--accent:${isSun?'#c49830':svc.color}" onclick="viewJob(${job.id})">
+        <div class="row" style="align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px">
+              <span style="font-size:16px">${svc.icon}</span>
+              <span style="font-size:15px;font-weight:700;color:#d8f3dc">${client?.name||'Onbekend'}</span>
+              <span class="badge" style="background:#0d1a12;color:${svc.color};border:1px solid ${svc.color}44">${svc.label}</span>
+              ${sunBadge}
+            </div>
+            <div style="font-size:12px;color:#5a8a6a;margin-bottom:${job.km>0?4:0}px">${client?.address||''}</div>
+            ${job.km>0?`<div class="mono" style="font-size:11px;color:#4a6a50">${job.km}km · brandstof ${rFmt(fuel)} · netto <span class="${net>=0?'pos':'neg'}">${rFmt(net)}</span></div>`:''}
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:10px">
+            <div class="mono" style="font-size:14px;color:#74c69d">${timeFmt(job.hour)}${ap(job.hour)}</div>
+            <div class="mono" style="font-size:11px;color:#3d6b4e;margin-top:2px">→ ${timeFmt(Math.floor(endH))}${ap(Math.floor(endH))}</div>
+            <div style="font-size:9px;color:#3d6b4e;text-transform:uppercase;letter-spacing:0.08em;margin-top:5px">${job.recur}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+function selectDay(i) {
+  currentDay = i;
+  renderSchedule();
+}
+
+// ── Clients ──
+function renderClients() {
+  const sunCount = state.clients.filter(c => c.sundayOk).length;
+  let html = `<div class="section-pad">
+    <div class="row" style="margin-bottom:16px;align-items:center">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#d8f3dc">Kliënte</div>
+        <div class="muted" style="margin-top:2px">${state.clients.length} aktief · ${sunCount} Sondag-OK</div>
+      </div>
+      <button class="btn-primary" onclick="openAddClient()" style="padding:10px 16px;font-size:12px">+ Kliënt</button>
+    </div>`;
+
+  if (state.clients.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">👤</div><p>Nog geen kliënte nie</p></div>`;
+  } else {
+    state.clients.forEach(c => {
+      const cJobs = state.jobs.filter(j => j.clientId === c.id);
+      const wRev  = cJobs.reduce((s,j) => { const r=revenue(j); return s+(j.recur==="weekly"?r:r/2); },0);
+      const wFuel = cJobs.reduce((s,j) => { const f=fuelCost(j); return s+(j.recur==="weekly"?f:f/2); },0);
+      html += `<div class="client-card" onclick="viewClient(${c.id})" style="cursor:pointer">
+        <div class="row" style="align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+              <span style="font-size:15px;font-weight:700;color:#d8f3dc">${c.name}</span>
+              <span class="sun-pill${c.sundayOk?' on':''}" onclick="event.stopPropagation();toggleSunday(${c.id})">☀️ ${c.sundayOk?'So OK':'Nie So'}</span>
+            </div>
+            <div style="font-size:12px;color:#5a8a6a;margin-bottom:2px">📍 ${c.address}</div>
+            <div class="mono" style="font-size:12px;color:#3d6b4e;margin-bottom:${c.notes?6:0}px">${c.phone}</div>
+            ${c.notes?`<div style="font-size:11px;color:#4a7a5a;background:#0d1a12;padding:6px 10px;border-radius:4px;border-left:2px solid #2d6a4f">${c.notes}</div>`:''}
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:12px">
+            <div class="mono" style="font-size:18px;color:#74c69d">${rFmt(wRev)}</div>
+            <div style="font-size:9px;color:#3d6b4e;text-transform:uppercase;letter-spacing:0.1em">/wk bruto</div>
+            ${wFuel>0?`<div class="mono" style="font-size:11px;color:#4a6a50;margin-top:2px">−${rFmt(wFuel)} br</div>`:''}
+            <div style="font-size:11px;color:#4a7a5a;margin-top:5px">${cJobs.length} werk${cJobs.length!==1?'e':''}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── Summary ──
+function renderSummary() {
+  const wRev  = weeklyRevenue(), wFuel = weeklyFuel(), wNet = weeklyNet(), tHrs = totalHours();
+  const sunJobs = dayJobs(6);
+  const unconfirmed = sunJobs.filter(j => !getClient(j.clientId)?.sundayOk).length;
+
+  let html = `<div class="section-pad">
+    <div style="font-size:20px;font-weight:700;color:#d8f3dc;margin-bottom:14px">Weeklikse Opsomming</div>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Bruto Inkomste</div>
+        <div class="stat-val pos">${rFmt(wRev)}</div>
+        <div class="stat-sub">~${rFmt(wRev*4.33)}/mnd</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Brandstofkoste</div>
+        <div class="stat-val" style="color:#e0a060">${rFmt(wFuel)}</div>
+        <div class="stat-sub">~${rFmt(wFuel*4.33)}/mnd</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Netto Inkomste</div>
+        <div class="stat-val ${wNet>=0?'pos':'neg'}">${rFmt(wNet)}</div>
+        <div class="stat-sub">~${rFmt(wNet*4.33)}/mnd</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Ure in Veld</div>
+        <div class="stat-val" style="color:#b7e4c7">${hFmt(tHrs)}</div>
+        <div class="stat-sub">${state.jobs.length} werke · ${state.clients.length} kliënte</div>
+      </div>
+    </div>
+
+    <div style="background:#0f1d14;border:1px solid #1e3a28;border-radius:6px;padding:10px 14px;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap">
+      <span style="font-size:11px;color:#3d6b4e">Tarief: <strong class="mono" style="color:#7aab8a">R${state.rate}/u</strong></span>
+      <span style="font-size:11px;color:#3d6b4e">Brandstof: <strong class="mono" style="color:#7aab8a">R${state.fuelPrice}/L</strong></span>
+      <span style="font-size:11px;color:#3d6b4e">Verbruik: <strong class="mono" style="color:#7aab8a">${state.fuelCons}L/100km</strong></span>
+    </div>`;
+
+  // Day breakdown
+  html += `<div style="background:#131f17;border:1px solid #1e3a28;border-radius:6px;overflow:hidden;margin-bottom:16px">
+    <div class="section-header">Dag vir Dag</div>`;
+  DAY_META.forEach((dm,i) => {
+    const dj = dayJobs(i);
+    const dRev  = dj.reduce((s,j) => { const r=revenue(j); return s+(j.recur==="weekly"?r:r/2); },0);
+    const dFuel = dj.reduce((s,j) => { const f=fuelCost(j); return s+(j.recur==="weekly"?f:f/2); },0);
+    const dNet  = dRev-dFuel;
+    const dH    = dj.reduce((s,j) => s+getSvc(j.svcId).dur/60, 0);
+    const rowBg = dm.sun ? 'background:#120f08' : '';
+    html += `<div style="${rowBg};display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid #0f1a13;gap:10px">
+      <div style="width:70px;font-size:12px;color:${dm.sun?'#8a7a3a':'#7aab8a'};flex-shrink:0">${dm.full.substring(0,2)}${dm.sun?' ☀️':''}</div>
+      <div style="flex:1;font-size:11px;color:#4a7a5a">${dj.map(j=>`${getSvc(j.svcId).icon} ${getClient(j.clientId)?.name||'?'}`).join(' · ')||'—'}</div>
+      ${dH>0?`<div class="mono" style="font-size:11px;text-align:right;flex-shrink:0">
+        <span class="pos">${rFmt(dRev)}</span>
+        ${dFuel>0?`<span style="color:#4a6a50"> −${rFmt(dFuel)}</span>`:''}
+        <span style="color:${dNet>=0?'#52a070':'#e07070'}"> = ${rFmt(dNet)}</span>
+        <span style="color:#3d6b4e"> ${hFmt(dH)}</span>
+      </div>`:''}
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Sunday status
+  if (sunJobs.length > 0) {
+    html += `<div style="background:#1a180e;border:1px solid #4a3a18;border-radius:6px;padding:12px 14px;margin-bottom:16px">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#8a7a3a;margin-bottom:5px">Sondagstatus</div>
+      <div style="font-size:13px;color:#a08030">${sunJobs.length} werk${sunJobs.length!==1?'e':''} op Sondag.
+        ${unconfirmed>0
+          ? `⚠️ ${unconfirmed} kliënt${unconfirmed!==1?'e':''} nie bevestig nie — reël eers.`
+          : `✓ Alle Sondagkliënte bevestig.`}
+      </div>
+    </div>`;
+  }
+
+  // Services breakdown
+  html += `<div style="background:#131f17;border:1px solid #1e3a28;border-radius:6px;overflow:hidden">
+    <div class="section-header">Dienste</div>`;
+  SERVICES.forEach(svc => {
+    const count = state.jobs.filter(j => j.svcId === svc.id).length;
+    if (!count) return;
+    html += `<div style="display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid #0f1a13;gap:10px">
+      <span style="font-size:16px">${svc.icon}</span>
+      <span style="flex:1;font-size:13px;color:#9ecfb0">${svc.label}</span>
+      <span class="mono" style="font-size:11px;color:#3d6b4e">${count}× · ${svc.dur}min · ${rFmt((svc.dur/60)*state.rate)}/werk</span>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+// SHEETS
+// ═══════════════════════════════════════════════════
+function showSheet(html) {
+  const root = document.getElementById('sheet-root');
+  root.innerHTML = `<div class="sheet-overlay" id="sheet-overlay">
+    <div class="sheet" id="sheet-box">
+      ${html}
+    </div>
+  </div>`;
+  document.getElementById('sheet-overlay').addEventListener('click', e => {
+    if (e.target.id === 'sheet-overlay') closeSheet();
+  });
+}
+function closeSheet() {
+  document.getElementById('sheet-root').innerHTML = '';
+}
+
+// ── View Job ──
+function viewJob(id) {
+  const job    = state.jobs.find(j => j.id === id);
+  if (!job) return;
+  const svc    = getSvc(job.svcId);
+  const client = getClient(job.clientId);
+  const endH   = job.hour + svc.dur/60;
+  const rev    = revenue(job), fuel = fuelCost(job), net = netIncome(job);
+  const dm     = DAY_META[job.day];
+
+  const html = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${client?.name||'Onbekend'} <span style="font-size:22px">${svc.icon}</span></div>
+    <div class="sheet-body">
+      <div style="font-size:12px;color:#5a8a6a;margin-bottom:14px">${dm.full} · ${timeFmt(job.hour)}${ap(job.hour)} – ${timeFmt(Math.floor(endH))}${ap(Math.floor(endH))}</div>
+      <div class="detail-grid">
+        ${[
+          ["Diens",     svc.label],
+          ["Duur",      `${svc.dur} min`],
+          ["Herhaling", job.recur],
+          ["Afstand",   job.km>0?`${job.km} km`:"—"],
+          ["Bruto",     rFmt(rev)],
+          ["Brandstof", job.km>0?rFmt(fuel):"—"],
+          ["Netto",     rFmt(net)],
+          ["Sondagstatus", job.day===6?(client?.sundayOk?'✓ Bevestig':'⚠ Onseker'):'—'],
+        ].map(([k,v]) => `<div class="detail-cell"><div class="detail-key">${k}</div><div class="detail-val">${v}</div></div>`).join('')}
+      </div>
+      ${client?.address?`<div class="detail-cell" style="margin-bottom:10px"><div class="detail-key">Adres</div><div style="font-size:13px;color:#9ecfb0;margin-top:4px">${client.address}</div></div>`:''}
+      ${client?.notes?`<div style="background:#0d1a12;border-radius:6px;padding:10px 12px;border-left:2px solid #2d6a4f"><div class="detail-key">Notas</div><div style="font-size:13px;color:#7aab8a;margin-top:4px">${client.notes}</div></div>`:''}
+    </div>
+    <div class="sheet-footer">
+      <button class="btn-danger" onclick="deleteJob(${id})">Verwyder</button>
+      <button class="btn-ghost" onclick="closeSheet()">Maak toe</button>
+    </div>`;
+  showSheet(html);
+}
+
+function deleteJob(id) {
+  state.jobs = state.jobs.filter(j => j.id !== id);
+  persist(); closeSheet(); render();
+}
+
+// ── Add Job ──
+function openAddJob() {
+  const clientOpts = state.clients.map(c =>
+    `<option value="${c.id}">${c.name}${c.sundayOk?' ☀️':''}</option>`
+  ).join('');
+  const dayOpts = DAY_META.map((d,i) =>
+    `<option value="${i}"${i===currentDay?' selected':''}>${d.full}${d.sun?' ☀️ — kliënt bevestig':''}</option>`
+  ).join('');
+  const hourOpts = HOURS.map(h =>
+    `<option value="${h}"${h===8?' selected':''}>${timeFmt(h)} ${ap(h)}</option>`
+  ).join('');
+  const svcOpts = SERVICES.map(s =>
+    `<option value="${s.id}"${s.id==='mow'?' selected':''}>${s.icon} ${s.label} (${s.dur}min)</option>`
+  ).join('');
+
+  const html = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Nuwe Werk</div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Kliënt</label>
+        <select class="form-select" id="nj-client"><option value="">Kies kliënt…</option>${clientOpts}</select></div>
+      <div class="form-group"><label class="form-label">Dag</label>
+        <select class="form-select" id="nj-day">${dayOpts}</select></div>
+      <div class="form-group"><label class="form-label">Begintyd</label>
+        <select class="form-select" id="nj-hour">${hourOpts}</select></div>
+      <div class="form-group"><label class="form-label">Diens</label>
+        <select class="form-select" id="nj-svc">${svcOpts}</select></div>
+      <div class="form-group"><label class="form-label">Herhaling</label>
+        <select class="form-select" id="nj-recur">
+          <option value="weekly">Weekliks</option>
+          <option value="fortnightly">Tweeweekliks</option>
+          <option value="once">Eenmalig</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Afstand na kliënt — een kant (km)</label>
+        <input class="form-input" type="number" min="0" id="nj-km" placeholder="0" inputmode="numeric"></div>
+      <div class="fuel-preview" id="fuel-preview" style="display:none"></div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn-ghost" onclick="closeSheet()">Kanselleer</button>
+      <button class="btn-primary" onclick="submitAddJob()">Voeg by</button>
+    </div>`;
+  showSheet(html);
+
+  ['nj-km','nj-svc'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateFuelPreview);
+    document.getElementById(id)?.addEventListener('change', updateFuelPreview);
+  });
+}
+
+function updateFuelPreview() {
+  const km  = Number(document.getElementById('nj-km')?.value) || 0;
+  const svc = document.getElementById('nj-svc')?.value;
+  const prev = document.getElementById('fuel-preview');
+  if (!prev) return;
+  if (km > 0 && svc) {
+    const fuel = (km/100)*state.fuelCons*state.fuelPrice;
+    const rev  = (getSvc(svc).dur/60)*state.rate;
+    const net  = rev - fuel;
+    prev.style.display = 'block';
+    prev.textContent = `Brandstof: ${rFmt(fuel)} · Netto: ${rFmt(net)}`;
+  } else {
+    prev.style.display = 'none';
+  }
+}
+
+function submitAddJob() {
+  const clientId = Number(document.getElementById('nj-client').value);
+  if (!clientId) { alert('Kies eers \'n kliënt.'); return; }
+  state.jobs.push({
+    id:      state.nextId++,
+    clientId,
+    day:     Number(document.getElementById('nj-day').value),
+    hour:    Number(document.getElementById('nj-hour').value),
+    svcId:   document.getElementById('nj-svc').value,
+    recur:   document.getElementById('nj-recur').value,
+    km:      Number(document.getElementById('nj-km').value) || 0,
+  });
+  persist(); closeSheet(); render();
+}
+
+// ── Add Client ──
+function openAddClient() {
+  const html = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Nuwe Kliënt</div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Naam</label>
+        <input class="form-input" id="nc-name" placeholder="bv. Van der Merwe" autocomplete="name"></div>
+      <div class="form-group"><label class="form-label">Adres</label>
+        <input class="form-input" id="nc-addr" placeholder="12 Akasialaan, Fochville"></div>
+      <div class="form-group"><label class="form-label">Selfoonnommer</label>
+        <input class="form-input" id="nc-phone" type="tel" placeholder="082 000 0000" inputmode="tel"></div>
+      <div class="form-group"><label class="form-label">Notas</label>
+        <input class="form-input" id="nc-notes" placeholder="Hekskode, hond, toegang…"></div>
+      <div class="form-group">
+        <div class="toggle-row" onclick="toggleAddClientSunday()">
+          <div class="toggle-track" id="nc-sun-track"><div class="toggle-thumb"></div></div>
+          <span class="toggle-label" id="nc-sun-label">☀️ Kliënt aanvaar Sondagwerk</span>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn-ghost" onclick="closeSheet()">Kanselleer</button>
+      <button class="btn-primary" onclick="submitAddClient()">Voeg by</button>
+    </div>`;
+  showSheet(html);
+  window._ncSunday = false;
+}
+
+function toggleAddClientSunday() {
+  window._ncSunday = !window._ncSunday;
+  const track = document.getElementById('nc-sun-track');
+  const label = document.getElementById('nc-sun-label');
+  track.classList.toggle('on', window._ncSunday);
+  label.style.color = window._ncSunday ? '#d4a843' : '#7aab8a';
+}
+
+function submitAddClient() {
+  const name = document.getElementById('nc-name').value.trim();
+  if (!name) { alert('Voer \'n naam in.'); return; }
+  state.clients.push({
+    id:       state.nextId++,
+    name,
+    address:  document.getElementById('nc-addr').value.trim(),
+    phone:    document.getElementById('nc-phone').value.trim(),
+    notes:    document.getElementById('nc-notes').value.trim(),
+    sundayOk: window._ncSunday || false,
+  });
+  persist(); closeSheet(); render();
+}
+
+// ── Toggle Sunday OK ──
+function toggleSunday(id) {
+  const c = state.clients.find(c => c.id === id);
+  if (c) { c.sundayOk = !c.sundayOk; persist(); render(); }
+}
+
+// ── Client Detail Page ──
+let _cpClientId = null;
+let _notepadTimer = null;
+
+function viewClient(id) {
+  const c = state.clients.find(c => c.id === id);
+  if (!c) return;
+  _cpClientId = id;
+
+  // Header
+  document.getElementById('cp-title').textContent = c.name;
+
+  // Build content
+  const cJobs = state.jobs.filter(j => j.clientId === id);
+  const wRev  = cJobs.reduce((s,j) => { const r=revenue(j); return s+(j.recur==="weekly"?r:r/2); },0);
+  const wFuel = cJobs.reduce((s,j) => { const f=fuelCost(j); return s+(j.recur==="weekly"?f:f/2); },0);
+  const wNet  = wRev - wFuel;
+
+  // Contact section
+  let html = `<div class="cp-section">
+    <div class="cp-section-title">Kontakbesonderhede</div>
+    <div class="cp-row"><span class="cp-key">Naam</span><span class="cp-val">${c.name}</span></div>
+    <div class="cp-row"><span class="cp-key">Selfoon</span><span class="cp-val"><a href="tel:${c.phone}" style="color:#74c69d;text-decoration:none">${c.phone||'—'}</a></span></div>
+    <div class="cp-row"><span class="cp-key">Adres</span><span class="cp-val">${c.address||'—'}</span></div>
+    <div class="cp-row"><span class="cp-key">Sondag</span><span class="cp-val">${c.sundayOk ? '<span style="color:#d4a843">☀️ Bevestig</span>' : '<span style="color:#5a8a6a">Nie bevestig nie</span>'}</span></div>
+    ${c.notes ? `<div class="cp-row"><span class="cp-key">Toegang</span><span class="cp-val" style="color:#7aab8a">${c.notes}</span></div>` : ''}
+  </div>`;
+
+  // Income summary
+  html += `<div class="cp-section">
+    <div class="cp-section-title">Weeklikse Inkomste</div>
+    <div class="cp-row"><span class="cp-key">Bruto</span><span class="cp-val mono pos">${rFmt(wRev)}</span></div>
+    <div class="cp-row"><span class="cp-key">Brandstof</span><span class="cp-val mono" style="color:#e0a060">${wFuel>0?'− '+rFmt(wFuel):'—'}</span></div>
+    <div class="cp-row"><span class="cp-key">Netto</span><span class="cp-val mono ${wNet>=0?'pos':'neg'}">${rFmt(wNet)}</span></div>
+    <div class="cp-row"><span class="cp-key">Per mnd</span><span class="cp-val mono" style="color:#b7e4c7">~${rFmt(wNet*4.33)}</span></div>
+  </div>`;
+
+  // Scheduled jobs
+  html += `<div class="cp-section">
+    <div class="cp-section-title">Geskeduleerde Werke (${cJobs.length})</div>`;
+  if (cJobs.length === 0) {
+    html += `<div class="cp-row"><span class="cp-val" style="color:#3d6b4e;font-style:italic">Geen werke geskeduleer nie</span></div>`;
+  } else {
+    cJobs.sort((a,b) => a.day - b.day || a.hour - b.hour).forEach(j => {
+      const svc  = getSvc(j.svcId);
+      const dm   = DAY_META[j.day];
+      const endH = j.hour + svc.dur/60;
+      const jRev = revenue(j);
+      const jFuel= fuelCost(j);
+      const jNet = jRev - jFuel;
+      html += `<div class="cp-job-row">
+        <span class="cp-job-icon">${svc.icon}</span>
+        <div class="cp-job-body">
+          <div class="cp-job-name">${svc.label}</div>
+          <div class="cp-job-meta">${dm.full} · ${timeFmt(j.hour)}${ap(j.hour)} – ${timeFmt(Math.floor(endH))}${ap(Math.floor(endH))} · ${svc.dur}min</div>
+          <div class="cp-job-meta" style="margin-top:2px">${j.recur}${j.km>0?' · '+j.km+'km':''}</div>
+        </div>
+        <div class="cp-job-right">
+          <div class="cp-job-rev">${rFmt(jRev)}</div>
+          ${jFuel>0?`<div class="cp-job-net">netto ${rFmt(jNet)}</div>`:''}
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  // Werksopdragte notepad — blank, user types their own
+  const savedNotes = c.werkNotas || '';
+  html += `<div class="cp-section">
+    <div class="cp-section-title">📋 Werksopdragte</div>
+    <textarea
+      class="notepad-area"
+      id="werknotas-area"
+      placeholder="Tik die kliënt se spesifieke opdragte hier in...&#10;&#10;bv.&#10;– Sny die groot bossie in die hoek&#10;– Maai voortuin en rand kante&#10;– Maai net agtertuin (nie rand nie)&#10;– Verwyder onkruid uit blombed&#10;– Vee oprit en paadjie skoon"
+      oninput="saveWerkNotas()"
+    >${savedNotes}</textarea>
+    <div class="notepad-saved" id="notepad-saved-msg">${savedNotes ? 'Gestoor' : ''}</div>
+  </div>`;
+
+  // Delete warning if has jobs
+  if (cJobs.length > 0) {
+    html += `<div style="background:#1a0f0a;border:1px solid #5a3010;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#b06030">
+      ⚠️ Verwyder hierdie kliënt sal ook ${cJobs.length} geskeduleerde werk${cJobs.length!==1?'e':''} uitvee.
+    </div>`;
+  }
+
+  document.getElementById('cp-content').innerHTML = html;
+
+  // Open the page
+  requestAnimationFrame(() => {
+    document.getElementById('client-page').classList.add('open');
+  });
+}
+
+function saveWerkNotas() {
+  clearTimeout(_notepadTimer);
+  _notepadTimer = setTimeout(() => {
+    const c = state.clients.find(c => c.id === _cpClientId);
+    if (!c) return;
+    const ta = document.getElementById('werknotas-area');
+    if (!ta) return;
+    c.werkNotas = ta.value;
+    persist();
+    const msg = document.getElementById('notepad-saved-msg');
+    if (msg) { msg.textContent = 'Gestoor ✓'; setTimeout(() => { if(msg) msg.textContent = ''; }, 2000); }
+  }, 600);
+}
+
+function closeClientPage() {
+  document.getElementById('client-page').classList.remove('open');
+  _cpClientId = null;
+}
+
+function cpDeleteClient() {
+  if (!_cpClientId) return;
+  const c = state.clients.find(c => c.id === _cpClientId);
+  if (!c) return;
+  const cJobs = state.jobs.filter(j => j.clientId === _cpClientId);
+  const msg = cJobs.length > 0
+    ? `Verwyder "${c.name}" en al ${cJobs.length} geskeduleerde werk${cJobs.length!==1?'e':''}?`
+    : `Verwyder "${c.name}"?`;
+  if (!confirm(msg)) return;
+  state.clients = state.clients.filter(c => c.id !== _cpClientId);
+  state.jobs    = state.jobs.filter(j => j.clientId !== _cpClientId);
+  persist(); closeClientPage(); render();
+}
+
+
+// ═══════════════════════════════════════════════════
+// MONTHLY PLANNER
+// ═══════════════════════════════════════════════════
+// calJobs: { id, clientId, dateKey:'YYYY-MM-DD', hour, svcId, km, note }
+// dateKey format: "2025-04-15"
+
+const MONTHS_AF = ['Januarie','Februarie','Maart','April','Mei','Junie','Julie','Augustus','September','Oktober','November','Desember'];
+const DOW_AF    = ['Ma','Di','Wo','Do','Vr','Sa','So']; // Mon=0 … Sun=6
+
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-based
+let _dpDateKey = null; // currently open day page date
+
+// ── Key helpers ──
+function dateKey(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function parseKey(k) { const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d); }
+function todayKey() { const n=new Date(); return dateKey(n.getFullYear(), n.getMonth(), n.getDate()); }
+
+// Recurring weekly jobs on a given date (by weekday)
+function recurringOnDate(dateStr) {
+  const dt  = parseKey(dateStr);
+  const jsDay = dt.getDay(); // 0=Sun
+  const ourDay = [6,0,1,2,3,4,5][jsDay]; // Mon=0…Sun=6
+  return state.jobs.filter(j => j.day === ourDay && j.recur !== 'once');
+}
+// Cal-specific one-off jobs on a date
+function calJobsOnDate(dateStr) {
+  return (state.calJobs||[]).filter(j => j.dateKey === dateStr);
+}
+function allJobsOnDate(dateStr) {
+  return [...recurringOnDate(dateStr), ...calJobsOnDate(dateStr)];
+}
+
+// ── Open / Close calendar ──
+function openCalPage() {
+  renderCalGrid();
+  document.getElementById('cal-page').classList.add('open');
+}
+function closeCalPage() {
+  document.getElementById('cal-page').classList.remove('open');
+  // Switch nav back to schedule visually but don't re-render main content
+  currentView = 'schedule';
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === 'schedule'));
+  document.getElementById('day-strip').style.display = 'block';
+  document.getElementById('fab').style.display = 'flex';
+}
+
+function calPrevMonth() {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalGrid();
+}
+function calNextMonth() {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalGrid();
+}
+
+function renderCalGrid() {
+  const tk = todayKey();
+  document.getElementById('cal-month-label').textContent = `${MONTHS_AF[calMonth]} ${calYear}`;
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const ourFirst = (firstDay + 6) % 7; // Mon=0
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+  // DOW headers
+  let gridHtml = '<div class="cal-dow-row">' +
+    DOW_AF.map((d,i) => `<div class="cal-dow${i===6?' sun':''}">${d}</div>`).join('') +
+    '</div><div class="cal-grid">';
+
+  // Empty cells before month starts
+  for (let e = 0; e < ourFirst; e++) gridHtml += '<div class="cal-cell empty"></div>';
+
+  let monthRev = 0, monthJobs = 0;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dk  = dateKey(calYear, calMonth, day);
+    const dt  = new Date(calYear, calMonth, day);
+    const dow = dt.getDay(); // 0=Sun
+    const isSun   = dow === 0;
+    const isToday = dk === tk;
+    const jobs    = allJobsOnDate(dk);
+    const hasJobs = jobs.length > 0;
+
+    monthJobs += jobs.length;
+    // Revenue: recurring at full week rate / 7 approx is wrong — just sum direct
+    jobs.forEach(j => {
+      const r = j.svcId ? revenue(j) : 0;
+      monthRev += r;
+    });
+
+    let cls = 'cal-cell';
+    if (isSun) cls += ' is-sun';
+    if (isToday) cls += ' today';
+    if (hasJobs) cls += ' has-jobs';
+
+    // Dots for each job (up to 5)
+    const dots = jobs.slice(0,5).map(j => {
+      const col = j.svcId ? getSvc(j.svcId).color : '#52796f';
+      return `<span class="cal-dot" style="background:${col}"></span>`;
+    }).join('');
+
+    const pip = isToday ? (isSun ? '<span class="cal-sun-pip"></span>' : '<span class="cal-today-pip"></span>') : '';
+
+    gridHtml += `<div class="${cls}" onclick="openDayPage('${dk}')">
+      ${pip}
+      <span class="cal-day-num">${day}</span>
+      <div class="cal-dots">${dots}</div>
+    </div>`;
+  }
+
+  gridHtml += '</div>';
+  document.getElementById('cal-grid-wrap').innerHTML = gridHtml;
+
+  // Monthly summary strip
+  document.getElementById('cal-month-summary').innerHTML =
+    `<span class="cal-sum-item">Werke: <span class="cal-sum-val">${monthJobs}</span></span>` +
+    `<span class="cal-sum-item">Bruto: <span class="cal-sum-val">${rFmt(monthRev)}</span></span>` +
+    `<span class="cal-sum-item">Netto: <span class="cal-sum-val">${rFmt(monthRev - 0)}</span></span>`;
+}
+
+// ── Day Detail Page ──
+function openDayPage(dk) {
+  _dpDateKey = dk;
+  const dt = parseKey(dk);
+  const tk = todayKey();
+  const dowIdx = [6,0,1,2,3,4,5][dt.getDay()]; // Mon=0
+  const dayName = DAY_META[dowIdx].full;
+  const dateStr = `${dt.getDate()} ${MONTHS_AF[dt.getMonth()]} ${dt.getFullYear()}`;
+  const isToday = dk === tk;
+  const isSun   = dt.getDay() === 0;
+
+  document.getElementById('dp-title').innerHTML =
+    `${dayName}, ${dateStr}` + (isToday ? ' <span style="font-size:11px;color:#74c69d;font-weight:400">● Vandag</span>' : '') +
+    (isSun ? ' <span style="font-size:13px">☀️</span>' : '');
+
+  renderDayPage(dk);
+  document.getElementById('day-page').classList.add('open');
+}
+
+function renderDayPage(dk) {
+  const recurJobs = recurringOnDate(dk);
+  const calJobs_  = calJobsOnDate(dk);
+  const allJobs   = [...recurJobs, ...calJobs_];
+  const isSun = parseKey(dk).getDay() === 0;
+
+  let html = '';
+
+  // Sunday notice
+  if (isSun) html += `<div style="background:#1a180e;border:1px solid #4a3a18;border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#a08030">☀️ <strong style="color:#d4a843">Sondag</strong> — bevestig kliënte voor jy boek.</div>`;
+
+  // Recurring jobs on this weekday
+  if (recurJobs.length > 0) {
+    html += `<div class="dp-section"><div class="dp-section-title">Gereelde Werke (${recurJobs.length})</div>`;
+    recurJobs.sort((a,b) => a.hour-b.hour).forEach(j => {
+      const svc = getSvc(j.svcId);
+      const cl  = getClient(j.clientId);
+      const endH = j.hour + svc.dur/60;
+      const jNet = netIncome(j);
+      html += `<div style="padding:13px 14px;border-bottom:1px solid #0f1a13;display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:18px;flex-shrink:0">${svc.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:#d8f3dc;margin-bottom:2px">${cl?.name||'?'}</div>
+          <div style="font-size:12px;color:#5a8a6a">${svc.label} · ${timeFmt(j.hour)}${ap(j.hour)}–${timeFmt(Math.floor(endH))}${ap(Math.floor(endH))} · ${svc.dur}min</div>
+          <div style="font-size:11px;color:#3d6b4e;margin-top:1px">${j.recur}${j.km>0?' · '+j.km+'km':''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'DM Mono',monospace;font-size:13px;color:#74c69d">${rFmt(revenue(j))}</div>
+          ${j.km>0?`<div style="font-family:'DM Mono',monospace;font-size:11px;color:#4a6a50">netto ${rFmt(jNet)}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Specific bookings for this date
+  if (calJobs_.length > 0) {
+    html += `<div class="dp-section"><div class="dp-section-title">Spesifieke Besprekings (${calJobs_.length})</div>`;
+    calJobs_.sort((a,b) => a.hour-b.hour).forEach(j => {
+      const svc = getSvc(j.svcId);
+      const cl  = getClient(j.clientId);
+      const endH = j.hour + svc.dur/60;
+      const jNet = netIncome(j);
+      html += `<div style="padding:13px 14px;border-bottom:1px solid #0f1a13;display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:18px;flex-shrink:0">${svc.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:#d8f3dc;margin-bottom:2px">${cl?.name||'?'}</div>
+          <div style="font-size:12px;color:#5a8a6a">${svc.label} · ${timeFmt(j.hour)}${ap(j.hour)}–${timeFmt(Math.floor(endH))}${ap(Math.floor(endH))} · ${svc.dur}min</div>
+          ${j.km>0?`<div style="font-size:11px;color:#3d6b4e;margin-top:1px">${j.km}km</div>`:''}
+          ${j.note?`<div style="font-size:12px;color:#7aab8a;margin-top:4px;font-style:italic">"${j.note}"</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'DM Mono',monospace;font-size:13px;color:#74c69d">${rFmt(revenue(j))}</div>
+          ${j.km>0?`<div style="font-family:'DM Mono',monospace;font-size:11px;color:#4a6a50">netto ${rFmt(jNet)}</div>`:''}
+          <button onclick="deleteCalJob(${j.id})" style="background:none;border:none;color:#8a4040;font-size:11px;cursor:pointer;margin-top:4px;padding:0;text-decoration:underline">verwyder</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Empty state
+  if (allJobs.length === 0) {
+    html += `<div class="empty" style="border-style:dashed">
+      <div class="empty-icon">📅</div>
+      <p>Geen werke vir hierdie dag nie</p>
+      <p style="margin-top:6px;font-size:12px;color:#2a4a35">Tik "+ Werk" om 'n boeking by te voeg</p>
+    </div>`;
+  }
+
+  document.getElementById('dp-content').innerHTML = html;
+}
+
+function closeDayPage() {
+  document.getElementById('day-page').classList.remove('open');
+  _dpDateKey = null;
+  renderCalGrid(); // refresh dots
+}
+
+function deleteCalJob(id) {
+  if (!confirm('Verwyder hierdie boeking?')) return;
+  state.calJobs = (state.calJobs||[]).filter(j => j.id !== id);
+  persist();
+  renderDayPage(_dpDateKey);
+  renderCalGrid();
+}
+
+// ── Add job to specific date ──
+function dpAddJob() {
+  if (!_dpDateKey) return;
+  const dt = parseKey(_dpDateKey);
+  const clientOpts = state.clients.map(c =>
+    `<option value="${c.id}">${c.name}${c.sundayOk?' ☀️':''}</option>`
+  ).join('');
+  const hourOpts = HOURS.map(h =>
+    `<option value="${h}"${h===8?' selected':''}>${timeFmt(h)} ${ap(h)}</option>`
+  ).join('');
+  const svcOpts = SERVICES.map(s =>
+    `<option value="${s.id}"${s.id==='mow'?' selected':''}>${s.icon} ${s.label} (${s.dur}min)</option>`
+  ).join('');
+
+  const dateLabel = `${dt.getDate()} ${MONTHS_AF[dt.getMonth()]} ${dt.getFullYear()}`;
+
+  const html = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Nuwe Boeking — ${dateLabel}</div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Kliënt</label>
+        <select class="form-select" id="dpj-client"><option value="">Kies kliënt…</option>${clientOpts}</select></div>
+      <div class="form-group"><label class="form-label">Begintyd</label>
+        <select class="form-select" id="dpj-hour">${hourOpts}</select></div>
+      <div class="form-group"><label class="form-label">Diens</label>
+        <select class="form-select" id="dpj-svc">${svcOpts}</select></div>
+      <div class="form-group"><label class="form-label">Afstand — een kant (km)</label>
+        <input class="form-input" type="number" min="0" id="dpj-km" placeholder="0" inputmode="numeric"></div>
+      <div class="form-group"><label class="form-label">Nota (opsioneel)</label>
+        <input class="form-input" id="dpj-note" placeholder="bv. Bring blaaspomp, hek is oop…"></div>
+      <div class="fuel-preview" id="dpj-fuel-preview" style="display:none"></div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn-ghost" onclick="closeSheet()">Kanselleer</button>
+      <button class="btn-primary" onclick="submitDpJob()">Voeg by</button>
+    </div>`;
+  showSheet(html);
+
+  ['dpj-km','dpj-svc'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', dpFuelPreview);
+    document.getElementById(id)?.addEventListener('change', dpFuelPreview);
+  });
+}
+
+function dpFuelPreview() {
+  const km  = Number(document.getElementById('dpj-km')?.value) || 0;
+  const svc = document.getElementById('dpj-svc')?.value;
+  const prev = document.getElementById('dpj-fuel-preview');
+  if (!prev) return;
+  if (km > 0 && svc) {
+    const fuel = (km/100)*state.fuelCons*state.fuelPrice;
+    const rev  = (getSvc(svc).dur/60)*state.rate;
+    prev.style.display = 'block';
+    prev.textContent   = `Brandstof: ${rFmt(fuel)} · Netto: ${rFmt(rev-fuel)}`;
+  } else { prev.style.display = 'none'; }
+}
+
+function submitDpJob() {
+  const clientId = Number(document.getElementById('dpj-client').value);
+  if (!clientId) { alert("Kies eers 'n kliënt."); return; }
+  if (!state.calJobs) state.calJobs = [];
+  state.calJobs.push({
+    id:       state.nextId++,
+    clientId,
+    dateKey:  _dpDateKey,
+    hour:     Number(document.getElementById('dpj-hour').value),
+    svcId:    document.getElementById('dpj-svc').value,
+    km:       Number(document.getElementById('dpj-km').value) || 0,
+    note:     document.getElementById('dpj-note').value.trim(),
+  });
+  persist(); closeSheet();
+  renderDayPage(_dpDateKey);
+  renderCalGrid();
+}
+
+// ── Settings ──
+function openSettings() {
+  const html = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">⚙️ Instellings</div>
+    <div class="sheet-body">
+      <div class="sett-row">
+        <span class="sett-key">Tarief (R/uur)</span>
+        <input class="sett-input" type="number" id="s-rate" value="${state.rate}" inputmode="numeric">
+      </div>
+      <div class="sett-row">
+        <span class="sett-key">Brandstofprys (R/liter)</span>
+        <input class="sett-input" type="number" id="s-fuel" value="${state.fuelPrice}" inputmode="decimal">
+      </div>
+      <div class="sett-row">
+        <span class="sett-key">Brandstofverbruik (L/100km)</span>
+        <input class="sett-input" type="number" id="s-cons" value="${state.fuelCons}" step="0.1" inputmode="decimal">
+      </div>
+      <div style="margin-top:20px;padding:12px;background:#0d1a12;border-radius:6px;border-left:2px solid #2d6a4f">
+        <div style="font-size:11px;color:#4a7a5a;margin-bottom:4px">Hoe om die app op jou tuisskerm te sit:</div>
+        <div style="font-size:12px;color:#7aab8a">In Chrome: tik die drie kolletjies (⋮) bo-regs → <strong>"Voeg by tuisskerm toe"</strong></div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn-ghost" onclick="closeSheet()">Kanselleer</button>
+      <button class="btn-primary" onclick="applySettings()">Pas toe</button>
+    </div>`;
+  showSheet(html);
+}
+
+function applySettings() {
+  state.rate      = Number(document.getElementById('s-rate').value)  || 180;
+  state.fuelPrice = Number(document.getElementById('s-fuel').value)  || 25;
+  state.fuelCons  = Number(document.getElementById('s-cons').value)  || 9.5;
+  persist(); closeSheet(); render();
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+document.getElementById('day-strip').style.display = 'block';
+document.getElementById('fab').style.display = 'flex';
+render();
+// Highlight today's tab on load
+const _todayDow = [6,0,1,2,3,4,5][new Date().getDay()];
+if (_todayDow !== currentDay) { /* currentDay already set to today */ }
+
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('SW:', r.scope))
+      .catch(e => console.warn('SW fail:', e));
+  });
+}
+
+// ── PWA Install Banner ──
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  if (!window.matchMedia('(display-mode: standalone)').matches
+      && !sessionStorage.getItem('pwa-dismissed')) {
+    showPwaBanner();
+  }
+});
+window.addEventListener('appinstalled', () => {
+  const b = document.getElementById('pwa-banner');
+  if (b) b.remove();
+  _deferredPrompt = null;
+});
+function showPwaBanner() {
+  if (document.getElementById('pwa-banner')) return;
+  const d = document.createElement('div');
+  d.id = 'pwa-banner';
+  d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:200;background:#0f2a1a;border-top:2px solid #2d6a4f;padding:14px 16px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px;font-family:Lato,sans-serif';
+  d.innerHTML = `
+    <img src="icon.svg" style="width:40px;height:40px;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:700;color:#d8f3dc">Installeer Bobaas</div>
+      <div style="font-size:11px;color:#5a8a6a;margin-top:2px">Volskerm · Werk sonder internet</div>
+    </div>
+    <button onclick="if(_deferredPrompt){_deferredPrompt.prompt();_deferredPrompt.userChoice.then(()=>{_deferredPrompt=null;document.getElementById('pwa-banner').remove()})}" style="background:#2d6a4f;color:#d8f3dc;border:none;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Lato,sans-serif;flex-shrink:0">Installeer</button>
+    <button onclick="document.getElementById('pwa-banner').remove();sessionStorage.setItem('pwa-dismissed','1')" style="background:none;border:none;color:#3d6b4e;font-size:24px;cursor:pointer;padding:2px 6px;line-height:1;flex-shrink:0">×</button>
+  `;
+  document.body.appendChild(d);
+}
+</script>
+</body>
+</html>
